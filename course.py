@@ -5,17 +5,7 @@ from calendar import Calendar, Event
 from fsrs import Scheduler, Card, Rating, ReviewLog
 from typing import List
 class Course:
-    name = ''
-    startDate = dt.now()
-    endDate = dt.now() + timedelta(days=91)
-    program = ''
-    textbook = ''
-    topics = {}
-    scheduler = None
-    cardList = []
-    courseConfidence = 0.00
-
-    def __init__(self, name, startDate, endDate, program, textbook, topics):
+    def __init__(self, name, startDate, endDate, program, textbook, topics, scheduler=None, cardList=None, courseConfidence=None):
         self.name = name
         self.startDate = startDate
         self.endDate = endDate
@@ -24,6 +14,7 @@ class Course:
         self.topics = topics
         self.scheduler = Scheduler(maximum_interval= (91 - (dt.now().day - startDate.day)))
         self.cardList = [Card(card_id = i) for i in range(len(topics))]
+        self.courseConfidence = courseConfidence
 
     def addMidterm(midterm: Event, calendar: Calendar):
         calendar.addEvent(midterm)
