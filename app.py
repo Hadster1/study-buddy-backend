@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from calendar import Calendar, Event
+from my_calendar import Calendar, Event
 from course import Course
 from datetime import datetime as dt
 import mysql.connector
