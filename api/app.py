@@ -109,59 +109,6 @@ def update_topic_confidence():
         return jsonify({"status": "success", "message": "Topic confidence updated successfully"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
-    
-# Run for add event button
-@app.route('/add_event', methods=['POST'])
-def add_event():
-    data = request.json
-    try:
-        # Create an Event object from the received JSON data
-        event = Event(
-            event_id=data['event_id'],
-            name=data['name'],
-            startDate=dt.strptime(data['startDate'], '%Y-%m-%d %H:%M'),
-            endDate=dt.strptime(data['endDate'], '%Y-%m-%d %H:%M'),
-            location=data['location'],
-            recurrence=data['recurrence'],
-            course=data.get('course'),
-            isMultiDay=data.get('isMultiDay', False),
-            color=data.get('color')
-        )
-        
-        # Add the event to the calendar
-        calendar.addEvent(event)
-        
-        # Connect to the database
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        # Insert the event into the calendar table
-        insert_query = """
-        INSERT INTO calendar (event_id, name, startDate, endDate, location, recurrence, course, isMultiDay, color)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(insert_query, (
-            data['event_id'],
-            data['name'],
-            data['startDate'],
-            data['endDate'],
-            data['location'],
-            data['recurrence'],
-            data.get('course'),
-            data.get('isMultiDay', False),
-            data.get('color')
-        ))
-        conn.commit()
-        
-        # Close the cursor and connection
-        cursor.close()
-        conn.close()
-
-        # Return success status
-        return jsonify({"status": "success", "message": "Event added successfully"})
-    except Exception as e:
-        # Return error status
-        return jsonify({"status": "error", "message": str(e)})
 
 # Run when calendar is selected
 @app.route('/update_schedule', methods=['POST'])
