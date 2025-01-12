@@ -3,6 +3,7 @@ from calendar import Calendar, Event
 from course import Course
 from datetime import datetime as dt
 import mysql.connector
+import json
 
 app = Flask(__name__)
 
@@ -35,6 +36,74 @@ if result:
 cursor.close()
 conn.close()
 
+# Run for add course button
+@app.route('/add_course', methods=['POST'])
+def add_course():
+    courseList = []
+    data = request.json
+    try:
+        # Create a Course object from the received JSON data
+        new_course = Course(
+            name=data['name'],
+            startDate=dt.strptime(data['startDate'], '%Y-%m-%d'),
+            endDate=dt.strptime(data['endDate'], '%Y-%m-%d'),
+            program=data['program'],
+            textbook=data['textbook'],
+            topics=data['topics']
+        )
+        courseList.append(new_course)
+        # Connect to the database
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # Insert the course into the courses table
+        insert_query = """
+        INSERT INTO courses (name, startDate, endDate, program, textbook, topics)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(insert_query, (
+            data['name'],
+            data['startDate'],
+            data['endDate'],
+            data['program'],
+            data['textbook'],
+            json.dumps(data['topics'])  # Convert list of topics to JSON string
+        ))
+        conn.commit()
+        
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+        
+        # Return success status
+        return jsonify({"status": "success", "message": "Course added successfully"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+# Run when course is selected
+@app.route('/update_topic_confidence', methods=['POST'])
+def update_topic_confidence():
+    data = request.json
+    try:
+        # Connect to the database
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+        
+        # Update the topic confidence in the courses table
+        update_query = "UPDATE topics SET topics = %s WHERE course_id = %s"
+        cursor.execute(update_query, (json.dumps(data['topics']), data['name']))
+        conn.commit()
+        
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+        
+        # Return success status
+        return jsonify({"status": "success", "message": "Topic confidence updated successfully"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+    
+# Run for add event button
 @app.route('/add_event', methods=['POST'])
 def add_event():
     data = request.json
@@ -87,6 +156,7 @@ def add_event():
         # Return error status
         return jsonify({"status": "error", "message": str(e)})
 
+# Run when calendar is selected
 @app.route('/update_schedule', methods=['POST'])
 def update_schedule():
     user_id = request.json['user_id']
@@ -112,47 +182,5 @@ def update_schedule():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
-@app.route('/add_course', methods=['POST'])
-def add_course():
-    courseList = []
-    data = request.json
-    try:
-        # Create a Course object from the received JSON data
-        new_course = Course(
-            name=data['name'],
-            startDate=dt.strptime(data['startDate'], '%Y-%m-%d'),
-            endDate=dt.strptime(data['endDate'], '%Y-%m-%d'),
-            program=data['program'],
-            textbook=data['textbook'],
-            topics=data['topics']
-        )
-        courseList.append(new_course)
-        # Connect to the database
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        # Insert the course into the courses table
-        insert_query = """
-        INSERT INTO courses (name, startDate, endDate, program, textbook, topics)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(insert_query, (
-            data['name'],
-            data['startDate'],
-            data['endDate'],
-            data['program'],
-            data['textbook'],
-            json.dumps(data['topics'])  # Convert list of topics to JSON string
-        ))
-        conn.commit()
-        
-        # Close the cursor and connection
-        cursor.close()
-        conn.close()
-        
-        # Return success status
-        return jsonify({"status": "success", "message": "Course added successfully"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
 if __name__ == '__main__':
     app.run()
