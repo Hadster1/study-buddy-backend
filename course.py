@@ -73,4 +73,5 @@ class Course:
         elif (self.topics[topic] >= 0.85):
             rating = Rating.Easy
         card, reviewLog = self.scheduler.schedule(card, rating)
+        return card.due
         
