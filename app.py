@@ -36,47 +36,54 @@ if result:
 cursor.close()
 conn.close()
 
-# Run for add course button
-@app.route('/add_course', methods=['POST'])
-def add_course():
-    courseList = []
+@app.route('/add_event', methods=['POST'])
+def add_event():
     data = request.json
+    print(data)  # Log the incoming data for debugging
     try:
-        # Create a Course object from the received JSON data
-        new_course = Course(
+        # Create an Event object from the received JSON data
+        event = Event(
+            event_id=data['event_id'],
             name=data['name'],
-            startDate=dt.strptime(data['startDate'], '%Y-%m-%d'),
-            endDate=dt.strptime(data['endDate'], '%Y-%m-%d'),
-            program=data['program'],
-            textbook=data['textbook'],
-            topics=data['topics']
+            startDate=dt.strptime(data['startDate'], '%Y-%m-%d %H:%M'),
+            endDate=dt.strptime(data['endDate'], '%Y-%m-%d %H:%M'),
+            location=data['location'],
+            recurrence=data['recurrence'],
+            course=data.get('course'),
+            isMultiDay=data.get('isMultiDay', False),
+            color=data.get('color')
         )
-        courseList.append(new_course)
-        # Connect to the database
+        
+        # Add the event to the calendar
+        calendar.addEvent(event)
+        # Log event data to make sure it's being processed correctly
+        print(event)
+        
+        # Connect to the database and insert the event
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         
-        # Insert the course into the courses table
         insert_query = """
-        INSERT INTO courses (name, startDate, endDate, program, textbook, topics)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO calendar (event_id, name, startDate, endDate, location, recurrence, course, isMultiDay, color)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(insert_query, (
+            data['event_id'],
             data['name'],
             data['startDate'],
             data['endDate'],
-            data['program'],
-            data['textbook'],
-            json.dumps(data['topics'])  # Convert list of topics to JSON string
+            data['location'],
+            data['recurrence'],
+            data.get('course'),
+            data.get('isMultiDay', False),
+            data.get('color')
         ))
         conn.commit()
-        
-        # Close the cursor and connection
+
         cursor.close()
         conn.close()
-        
-        # Return success status
-        return jsonify({"status": "success", "message": "Course added successfully"})
+
+        return jsonify({"status": "success", "message": "Event added successfully"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
