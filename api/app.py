@@ -36,6 +36,10 @@ if result:
 cursor.close()
 conn.close()
 
+@app.route('/') 
+def index(): 
+    return 'Welcome to the Study Buddy Backend API'
+    
 @app.route('/add_event', methods=['POST'])
 def add_event():
     data = request.json
