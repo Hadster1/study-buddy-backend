@@ -1,7 +1,7 @@
 # type: ignore
 from datetime import datetime as dt
 from datetime import timedelta
-from calendar import Calendar, Event
+from my_calendar import Calendar, Event
 from fsrs import Scheduler, Card, Rating, ReviewLog
 from typing import List
 class Course:
